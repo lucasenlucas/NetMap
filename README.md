@@ -1,86 +1,172 @@
-# NetMap
+<p align="center">
+  <img src="https://github.com/lucasenlucas/lucas_cdn/blob/main/Scherm%C2%ADafbeelding%202026-04-10%20om%2021.09.22.png?raw=true" alt="NetMap Banner"/>
+</p>
 
-**Visual Intelligence & Network Mapping Tool**
+<p align="center">
+  <strong>NetMap</strong> — Visual Network Mapping CLI
+</p>
 
-NetMap is een professionele CLI-tool voor developers en security specialisten om de structuur van een domein visueel in kaart te brengen. In plaats van een simpele lijst, bouwt NetMap een hiërarchische map van subdomeinen en endpoints met een sterke focus op **visual mapping** en **clarity**.
+<p align="center">
+  Structure • Insight • Clarity — see how systems are built
+</p>
+
+<p align="center">
+  <strong>Understand the system. Not just the endpoints.</strong>
+</p>
 
 ---
 
-## 🔥 Quick Install (macOS & Linux)
+## What is NetMap?
 
-Installeer de nieuwste versie met één commando:
+NetMap is a **visual mapping CLI** that transforms domains, subdomains, and endpoints into a clear, structured overview.
 
-```bash
+No endless lists. No guessing.
+
+Just:
+```
+netmap -d example.com
+```
+→ and instantly see how everything connects.
+Built as part of the **NET Ecosystem** alongside NetScope and NetForce.
+
+## Authorized Use Only
+NetMap is designed strictly for:
+* Systems you own
+* Systems you have explicit permission to analyze
+This tool performs network requests and structure mapping. Use responsibly.
+
+## Quick Install
+### macOS & Linux
+```
 curl -fsSL https://raw.githubusercontent.com/lucasenlucas/NetMap/main/install.sh | sh
 ```
-
-*Na installatie kun je direct starten met `netmap --help`.*
-
----
-
-## 🚀 Basis Gebruik
-
-Breng de structuur van een website overzichtelijk in kaart:
-
-```bash
-netmap -d voorbeeld.nl
+Run instantly:
+```
+netmap --help
+```
+### Go install
+```
+go install github.com/lucasenlucas/netmap/cmd/netmap@latest
 ```
 
-**Simpele uitleg:**
-Brengt de structuur van een website overzichtelijk in kaart door visual mapping.
-
-**Precieze uitleg:**
-Start een OSINT-gebaseerde discovery (via Certificate Transparency logs) om subdomeinen te identificeren, en voert vervolgens gelijktijdige HTTP-requests uit om actieve endpoints te detecteren, te valideren en te structureren in een hiërarchische map.
-
----
-
-## 🚩 Flags
-
-### 1. Domein (`-d`, `--domain`)
-*   **Simpele uitleg:** De website die je wilt analyseren.
-*   **Precieze uitleg:** Definieert het root-domein voor de mapping. Wordt gebruikt als startpunt voor OSINT discovery en endpoint mapping.
-
-### 2. Focus (`-f`, `--focus`)
-*Opties: all, auth, admin, api*
-*   **Simpele uitleg:** Laat alleen specifieke onderdelen zien, zoals login- of admin-pagina’s.
-*   **Precieze uitleg:** Filtert nodes op basis van hun classificatie (EndpointType). Dit maakt het mogelijk om gericht delen van de infrastructuur te analyseren.
-
-### 3. Output (`-o`, `--output`)
-*Opties: text, json*
-*   **Simpele uitleg:** Kies tussen een leesbare structuur of data voor andere tools.
-*   **Precieze uitleg:** 
-    *   `text` → Hiërarchische CLI visualisatie.
-    *   `json` → Gestructureerde graph output (nodes + edges) voor frontend visualisatie.
-
-### 4. Mode (`-m`, `--mode`)
-*Opties: basic, advanced*
-*   **Simpele uitleg:** Hoe diep NetMap analyseert.
-*   **Precieze uitleg:** Bepaalt de intensiteit van discovery en validatie. `basic` is voor snelheid, `advanced` voor uitgebreide pad-detectie.
-
----
-
-## 🧠 Intelligence Engine
-
-| Onderdeel | Simpele uitleg | Precieze uitleg |
-| :--- | :--- | :--- |
-| **OSINT Discovery** | Zoekt openbare info over de site | Gebruikt Certificate Transparency logs (zoals crt.sh) als bron voor bekende subdomeinen. |
-| **Live Probing** | Checkt welke onderdelen reageren | Voert gelijktijdige HTTP HEAD/GET requests uit om actieve endpoints te detecteren. |
-| **Classification** | Labelt onderdelen | Classificeert endpoints via pattern matching (regex) in categorieën zoals auth, admin en api. |
-| **Structuring** | Maakt er een overzicht van | Bouwt een hiërarchische graph (nodes + relaties) voor superieure visuele clarity. |
-
----
-
-## 💡 Voorbeelden
-
-```bash
-# Alleen admin endpoints zien
-netmap -d voorbeeld.nl -f admin
-
-# Exporteren naar JSON voor weergave in websites
-netmap -d voorbeeld.nl -o json > scan.json
-
-# Uitgebreide scan met debug info
-netmap -d voorbeeld.nl -m advanced -v
+### Manual build
+```
+git clone https://github.com/lucasenlucas/NetMap.git
+cd NetMap
+go mod tidy
+go build -o netmap ./cmd/netmap
+./netmap -d example.com
 ```
 
-> **NetMap** maakt deel uit van het NET Ecosystem. Voor geautoriseerd gebruik en legitieme analyse.
+## CLI Philosophy
+Same system as NetScope & NetForce → no learning curve.
+```
+netmap -d <domain> [options]
+```
+
+## Core Flags
+| Flag            | Description                            |
+| --------------- | -------------------------------------- |
+| `-d, --domain`  | Target domain                          |
+| `-f, --focus`   | Filter (`all`, `auth`, `admin`, `api`) |
+| `-o, --output`  | `text` | `json`                        |
+| `-m, --mode`    | `basic` | `advanced`                   |
+| `-v, --verbose` | Debug output                           |
+
+## Core Features
+map - Full Structure Mapping
+```
+netmap -d example.com
+```
+
+### focus — Targeted View
+```
+netmap -d example.com -f auth
+netmap -d example.com -f admin
+```
+### export — Data Output
+```
+netmap -d example.com -o json > map.json
+```
+
+### advanced — Deeper Mapping
+```
+netmap -d example.com -m advanced
+```
+
+## How it works
+### OSINT Discovery
+Uses Certificate Transparency logs (e.g. crt.sh)
+→ finds known subdomains without directly targeting the server
+
+### Live Probing
+Performs concurrent HTTP requests
+→ detects active endpoints and validates responses
+
+### Classification
+Endpoints are labeled automatically:
+* [AUTH] → login / authentication
+* [ADMIN] → admin panels
+* [API] → API routes
+* [GENERAL] → standard paths
+
+### Structuring
+All data is transformed into a hierarchical map
+→ from raw data → to clear structure
+
+### Output Example
+```
+╔══════════════════════════════════════════╗
+║           NetMap — Mapping               ║
+╚══════════════════════════════════════════╝
+
+example.com
+├── api.example.com
+│   ├── /v1/users [API]
+│   └── /auth/login [AUTH]
+├── admin.example.com
+│   └── /login [ADMIN]
+└── www.example.com
+    └── /dashboard
+
+Summary:
+- Subdomains:          3
+- Endpoints:           4
+- High-interest nodes: 2
+```
+
+### Why NetMap?
+Most tools give you:
+* raw data
+* messy output
+* no structure
+NetMap gives you:
+* clarity
+* structure
+* visual understanding
+
+### Part of the NET Ecosystem
+* NetScope → discovery
+* NetForce → performance testing
+* NetIntel → analysis
+* NetMap → visualization
+Together: → a complete network analysis toolkit
+
+### Roadmap
+* Interactive web visualization
+* Node color highlighting (risk-based)
+* NetScope integration
+* NetIntel overlay
+* Graph export (nodes + edges)
+
+## Author
+Built by Lucas Mangroelal 
+https://lucasmangroelal.nl
+
+## ❤️ Support
+* ⭐ Star the repo
+* 🔗 Share it
+* 🛠️ Contribute
+
+# ⚠️ Disclaimer
+**This tool is for educational and authorized use only. Do not use it against systems without permission.**
