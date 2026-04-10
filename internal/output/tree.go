@@ -47,29 +47,40 @@ func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
 	// Calculate maximum line length to align tags
 	maxLineLen := 0
 	for _, root := range roots {
-		subs := childrenMap[root.ID]
-		for i, sub := range subs {
-			isLastSub := i == len(subs)-1
+		var rootSubs []*models.Node
+		var rootEps []*models.Node
+		for _, child := range childrenMap[root.ID] {
+			if child.Type == models.SubdomainNode {
+				rootSubs = append(rootSubs, child)
+			} else if child.Type == models.EndpointNode {
+				if focus == models.FocusAll || string(child.Category) == string(focus) {
+					rootEps = append(rootEps, child)
+				}
+			}
+		}
+
+		for i, sub := range rootSubs {
+			isLastSub := (i == len(rootSubs)-1) && len(rootEps) == 0
 			subPrefix := "│   "
 			if isLastSub {
 				subPrefix = "    "
 			}
 
 			eps := childrenMap[sub.ID]
-			for j, ep := range eps {
+			for _, ep := range eps {
 				if focus == models.FocusAll || string(ep.Category) == string(focus) {
-					isLastEp := j == len(eps)-1
-					epPrefix := "├──"
-					if isLastEp {
-						epPrefix = "└──"
-					}
-					lineStr := fmt.Sprintf("%s%s %s", subPrefix, epPrefix, ep.Label)
-					// Handle the exact number of filtered eps effectively by recalibrating isLastEp
-					// This is purely for max width estimation, so a loose bound is fine:
+					lineStr := fmt.Sprintf("%s├── %s", subPrefix, ep.Label)
 					if len(lineStr) > maxLineLen {
 						maxLineLen = len(lineStr)
 					}
 				}
+			}
+		}
+
+		for _, ep := range rootEps {
+			lineStr := fmt.Sprintf("├── %s", ep.Label)
+			if len(lineStr) > maxLineLen {
+				maxLineLen = len(lineStr)
 			}
 		}
 	}
@@ -84,9 +95,21 @@ func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
 	// Structure
 	for _, root := range roots {
 		fmt.Printf("%s%s%s\n", Bold, root.Label, Reset)
-		subs := childrenMap[root.ID]
-		for i, sub := range subs {
-			isLastSub := i == len(subs)-1
+		
+		var rootSubs []*models.Node
+		var rootEps []*models.Node
+		for _, child := range childrenMap[root.ID] {
+			if child.Type == models.SubdomainNode {
+				rootSubs = append(rootSubs, child)
+			} else if child.Type == models.EndpointNode {
+				if focus == models.FocusAll || string(child.Category) == string(focus) {
+					rootEps = append(rootEps, child)
+				}
+			}
+		}
+
+		for i, sub := range rootSubs {
+			isLastSub := (i == len(rootSubs)-1) && len(rootEps) == 0
 			prefix := "├──"
 			if isLastSub {
 				prefix = "└──"
@@ -94,7 +117,6 @@ func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
 			fmt.Printf("%s %s%s%s\n", prefix, White, sub.Label, Reset)
 
 			eps := childrenMap[sub.ID]
-			
 			var filteredEps []*models.Node
 			for _, ep := range eps {
 				if focus == models.FocusAll || string(ep.Category) == string(focus) {
@@ -117,7 +139,6 @@ func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
 				baseStr := fmt.Sprintf("%s%s %s", subPrefix, epPrefix, ep.Label)
 				fmt.Print(baseStr)
 
-				// Calculate offset for alignment
 				paddingList := padSpacing - len(baseStr)
 				if paddingList < 1 {
 					paddingList = 1
@@ -126,6 +147,24 @@ func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
 				printCategoryLabel(ep.Category)
 				fmt.Println()
 			}
+		}
+
+		for j, ep := range rootEps {
+			isLastEp := j == len(rootEps)-1
+			epPrefix := "├──"
+			if isLastEp {
+				epPrefix = "└──"
+			}
+			baseStr := fmt.Sprintf("%s %s", epPrefix, ep.Label)
+			fmt.Print(baseStr)
+
+			paddingList := padSpacing - len(baseStr)
+			if paddingList < 1 {
+				paddingList = 1
+			}
+			fmt.Print(strings.Repeat(" ", paddingList))
+			printCategoryLabel(ep.Category)
+			fmt.Println()
 		}
 	}
 
