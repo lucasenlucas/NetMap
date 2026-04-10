@@ -66,22 +66,34 @@ netmap -d <domain> [options]
 | `-m, --mode`    | `basic` | `advanced`                   |
 | `-v, --verbose` | Debug output                           |
 
-## Core Features
-### ultra — Maximum Recon
-```
-netmap -d example.com -p ultra
-```
-The **Ultra Intelligence Engine** uses over 2500+ combined targets for deep infrastructure mapping.
+## Power Usage & Examples
 
-### dns — Deep Infrastructure Recon
+### 🚀 The Ultra Scan (Krachtigste Command)
+Gebruik dit voor de meest complete mapping van een target. Het combineert de grootste intelligentie-set met diepe DNS-reconstructie.
+```bash
+netmap -d voorbeeld.nl -p ultra -m advanced
 ```
-netmap -d example.com -f dns
-```
-NetMap now analyzes **CNAME, MX, and TXT** records to uncover hidden aliases, mail handlers, and cloud providers.
+* **Wat gebeurt er?**: Scant 2500+ targets, voert DNS brute-forcing uit en haalt alle CNAME/MX/TXT records op.
 
-### Live Feedback
-NetMap provides real-time terminal progress during high-volume scans:
-`[~] Mapping: 12/50 hosts | 452/2500 endpoints | [Checking: /api/v2/config]`
+### 🏢 Infrastructure Only
+Filter alle web-ruis weg en bekijk puur de DNS-architectuur en providers.
+```bash
+netmap -d voorbeeld.nl -f dns
+```
+* **Wat gebeurt er?**: Toont alleen de infrastructuur-nodes zoals mailservers en CDN-aliassen.
+
+### 🔓 Security Audit
+Focus op gevoelige configuraties en development artifacts.
+```bash
+netmap -d voorbeeld.nl -p full -f config
+```
+* **Wat gebeurt er?**: Zoekt specifiek naar `.env`, `wp-config`, `.git` mappen en andere risico-punten.
+
+### 🤖 Automation / JSON Export
+Exporteer de volledige graaf naar JSON voor gebruik in externe visualisatie-tools of pipelines.
+```bash
+netmap -d voorbeeld.nl -o json > map.json
+```
 
 ## How it works
 ### OSINT Discovery
@@ -100,7 +112,6 @@ Endpoints are labeled automatically:
 * `[DNS]` → CNAME, MX, TXT records
 * `[CONFIG]` → Sensitive configuration files (.env, settings)
 * `[DEV]` → Development artifacts (.git, Dockerfiles)
-* `[GENERAL]` → standard paths
 
 ## Author
 Built by Lucas Mangroelal 
