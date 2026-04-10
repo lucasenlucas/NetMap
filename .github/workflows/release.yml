@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Build binaries
+        run: |
+          mkdir -p dist
+          GOOS=darwin  GOARCH=arm64  go build -o dist/netmap-darwin-arm64      ./cmd/netmap
+          GOOS=darwin  GOARCH=amd64  go build -o dist/netmap-darwin-amd64      ./cmd/netmap
+          GOOS=linux   GOARCH=amd64  go build -o dist/netmap-linux-amd64       ./cmd/netmap
+          GOOS=linux   GOARCH=arm64  go build -o dist/netmap-linux-arm64       ./cmd/netmap
+          GOOS=windows GOARCH=amd64  go build -o dist/netmap-windows-amd64.exe ./cmd/netmap
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          name: NetMap Release ${{ steps.version.outputs.VERSION }}
+          body: |
+            ## NetMap ${{ steps.version.outputs.VERSION }}
+
+            NetMap is the visual intelligence and mapping utility for the NET Ecosystem.
+
+            ### Installation
+            Extract the binary for your architecture and run from your terminal:
+            ```bash
+            ./netmap -d example.com
+            ```
+
+            ### Usage
+            ```bash
+            netmap --help
+            netmap -d target.com
+            netmap -d target.com -f auth
+            netmap -d target.com -o json
+            ```
+
+            ### Binaries
+            | Platform | File |
+            |---|---|
+            | macOS arm64 (M1/M2/M3) | `netmap-darwin-arm64` |
+            | macOS amd64 (Intel) | `netmap-darwin-amd64` |
+            | Linux amd64 | `netmap-linux-amd64` |
+            | Linux arm64 | `netmap-linux-arm64` |
+            | Windows amd64 | `netmap-windows-amd64.exe` |
+
+            > ⚠️ For authorized testing only. Part of the NET Toolkit.
+          files: |
+            dist/netmap-darwin-arm64
+            dist/netmap-darwin-amd64
+            dist/netmap-linux-amd64
+            dist/netmap-linux-arm64
+            dist/netmap-windows-amd64.exe
+          draft: false
+          prerelease: false

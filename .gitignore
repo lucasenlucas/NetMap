@@ -1,0 +1,15 @@
+# Binaries
+/netmap
+dist/
+*.exe
+*.out
+
+# OS Specific
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Env dependencies
+.env
