@@ -26,19 +26,29 @@ var (
 		"db", "database", "sql", "rds", "redis", "cache", "storage", "media", "bucket",
 		"s3", "pub", "private", "hidden", "secret", "vault", "auth", "sso", "identity",
 		"login", "signin", "signup", "account", "profile", "billing", "payment",
-		"invoice", "order", "tracking", "status", "news", "press", "events", "jobs",
-		"career", "hiring", "team", "staff", "client", "customer", "partner", "dist",
-		"reseller", "api1", "api2", "api3", "v3", "mobile-api", "iot", "sensor",
-		"camera", "print", "printer", "scan", "scanner", "wifi", "guest", "office",
-		"branch", "hq", "corp", "local", "home", "backoffice", "erp", "crm", "hr",
-		"payroll", "finance", "legal", "compliance", "audit", "security", "soc",
-		"noc", "proxy", "lb", "gateway", "edge", "cdn1", "cdn2", "static1", "static2",
-		"upload", "upload-api", "media-api", "stream", "video", "audio", "voice",
-		"chat", "support-api", "helpdesk", "ticketing", "service", "services",
-		"catalog", "inventory", "search", "search-api", "elastic-api", "solr",
-		"api-v1", "api-v2", "api-v3", "endpoint", "endpoints", "router", "switch",
-		"firewall", "vpn-gate", "vps", "server", "host", "node", "cluster", "master",
-		"worker", "slave", "back", "front", "app1", "app2", "app3", "web1", "web2",
+	}...)
+
+	subdomainsUltra = append(subdomainsComprehensive, []string{
+		"dev-ws", "staging-ws", "prod-ws", "ws", "socket", "stream", "live", "chat",
+		"beta-app", "alpha-app", "demo-app", "qa-app", "test-app", "mobile-api",
+		"android", "ios", "blackberry", "desktop", "client", "customer", "partner",
+		"reseller", "affiliate", "tracking", "analytics", "pixel", "telemetry",
+		"metrics", "log", "logs", "error", "errors", "trace", "debug", "admin-api",
+		"adm", "mgt", "management", "control", "cp", "panel", "direct", "origin",
+		"edge", "lb", "proxy", "waf", "cdn-cgi", "cache-api", "static", "assets",
+		"images-api", "media-server", "upload-api", "file-api", "download-api",
+		"api01", "api02", "api03", "api04", "node01", "node02", "node03", "cluster1",
+		"cluster2", "aws-eu", "aws-us", "gcp-eu", "gcp-us", "azure-eu", "azure-us",
+		"backup-api", "db-api", "sql-api", "search-api", "index-api", "internal-api",
+		"private-api", "secure-gateway", "identity-api", "auth-api", "sso-api",
+		"mail-api", "smtp", "pop3", "imap", "exchange", "webmail-api", "sip-api",
+		"voip", "rtc", "conference", "meeting", "events-api", "calendar", "tasks",
+		"drive", "box", "sync", "share", "docs-api", "wiki-api", "notes", "tasks-api",
+		"shop-api", "cart", "checkout", "billing-api", "payment-api", "wallet",
+		"crypto", "coins", "exchange-api", "trade", "market", "data", "stats",
+		"research", "training", "university", "academy", "learning", "portal-api",
+		"help-api", "support-desk", "tickets", "crm-api", "erp-api", "hr-api",
+		"fin", "legal", "compliance", "audit", "security-api", "soc-api",
 	}...)
 
 	pathsBasic = []string{
@@ -68,35 +78,48 @@ var (
 	}
 
 	pathsComprehensive = append(pathsCommon, []string{
-		"/.git/config", "/.git/head", "/.ssh/id_rsa", "/.ssh/id_dsa", "/.ssh/authorized_keys",
-		"/.aws/credentials", "/.aws/config", "/.docker/config.json", "/.npmrc", "/.yarnrc",
-		"/.bash_history", "/.zsh_history", "/.mysql_history", "/.pgsql_history",
-		"/phpinfo.php", "/info.php", "/status.php", "/health_check", "/debug",
-		"/.well-known/security.txt", "/.well-known/assetlinks.json", "/.well-known/apple-app-site-association",
-		"/wp-config.php", "/wp-config.php.bak", "/wp-config.php.swp", "/configuration.php",
-		"/config.php", "/settings.py", "/local_settings.py", "/appsettings.json",
-		"/web.config", "/htaccess", "/.htaccess", "/nginx.conf", "/proxy.conf",
-		"/php.ini", "/etc/passwd", "/etc/shadow", "/etc/group", "/etc/hosts",
-		"/boot.ini", "/servlets/config.xml", "/WEB-INF/web.xml", "/WEB-INF/config.xml",
-		"/META-INF/maven/pom.xml", "/pom.xml", "/build.gradle", "/package.json",
-		"/npm-debug.log", "/yarn-error.log", "/error_log", "/access_log", "/logs/access.log",
-		"/logs/error.log", "/logs/api.log", "/storage/logs/laravel.log", "/tmp/session",
-		"/sessions", "/cache", "/temp", "/tmp", "/uploads", "/attachments", "/downloads",
-		"/export", "/import", "/scripts", "/bin", "/src", "/lib", "/include", "/tests",
-		"/spec", "/features", "/vendor", "/node_modules", "/bower_components",
-		"/dist", "/build", "/out", "/public/dist", "/public/build", "/client/dist",
-		"/server/dist", "/admin/assets", "/admin/css", "/admin/js", "/admin/img",
-		"/api/v1/health", "/api/v1/metrics", "/api/v1/status", "/api/v1/debug",
-		"/api/v2/health", "/api/v3/health", "/api/health", "/actuator/health",
-		"/actuator/metrics", "/actuator/env", "/actuator/beans", "/actuator/info",
-		"/prometheus", "/graph", "/grafana", "/zabbix", "/nagios", "/kibana",
-		"/elastic", "/solr", "/jenkins", "/gitlab", "/travis", "/circleci",
-		"/docker-compose.yaml", "/kubernetes.yaml", "/k8s.yaml", "/manifest.yaml",
-		"/chart.yaml", "/values.yaml", "/terraform.tfstate", "/terraform.tfvars",
-		"/secrets.yaml", "/vault.yaml", "/credentials.json", "/key.pem", "/cert.pem",
-		"/id_rsa", "/id_rsa.pub", "/authorized_keys", "/known_hosts", "/config.bak",
-		"/database.sql", "/db.sql", "/dump.sql", "/backup.sql", "/data.sql",
-		"/backup.zip", "/backup.tar.gz", "/backup.tgz", "/site.zip", "/www.zip",
+		"/.git/config", "/.git/head", "/.ssh/id_rsa", "/.aws/credentials",
+		"/wp-config.php", "/config.php", "/settings.py", "/appsettings.json",
+		"/web.config", "/.htaccess", "/phpinfo.php", "/info.php", "/status.php",
+		"/.well-known/security.txt", "/swagger/index.html", "/prometheus", "/grafana",
+		"/docker-compose.yaml", "/kubernetes.yaml", "/terraform.tfstate",
+	}...)
+
+	pathsUltra = append(pathsComprehensive, []string{
+		"/api/v1/user", "/api/v1/admin", "/api/v1/config", "/api/v1/settings",
+		"/api/v2/user", "/api/v2/admin", "/api/v2/config", "/api/v2/settings",
+		"/api/v3/user", "/api/v3/admin", "/api/v3/config", "/api/v3/settings",
+		"/v1.0", "/v2.0", "/v3.0", "/api/internal", "/api/private", "/api/secure",
+		"/auth/v1/login", "/auth/v2/login", "/oauth2/token", "/oauth2/authorize",
+		"/saml/metadata", "/.well-known/openid-configuration", "/.well-known/jwks.json",
+		"/api/graphql", "/api/rest", "/api/json", "/api/xml", "/api/v1/status/health",
+		"/management/health", "/management/info", "/management/metrics", "/actuator",
+		"/actuator/health", "/actuator/info", "/actuator/prometheus", "/api/v1/debug",
+		"/api/v1/trace", "/api/v1/log", "/api/v1/dump", "/admin/settings", "/admin/users",
+		"/admin/api", "/admin/logs", "/admin/system", "/admin/config", "/admin/db",
+		"/pma", "/phpmyadmin", "/myadmin", "/mysql", "/sql", "/dbadmin", "/web-console",
+		"/console", "/shell", "/terminal", "/exec", "/run", "/cmd", "/ping",
+		"/temp/config", "/tmp/config", "/backup/config", "/old/config", "/v1/config",
+		"/v2/config", "/v3/config", "/api-docs/v1", "/api-docs/v2", "/api-docs/v3",
+		"/swagger-resources", "/swagger-ui", "/v1/swagger.json", "/v2/swagger.json",
+		"/.env.production", "/.env.staging", "/.env.local", "/.env.test", "/.env.dev",
+		"/config/database.yaml", "/config/settings.yaml", "/config/auth.yaml",
+		"/docker-compose.override.yml", "/docker-stack.yml", "/k8s/deployment.yaml",
+		"/k8s/service.yaml", "/k8s/ingress.yaml", "/k8s/secret.yaml", "/k8s/configmap.yaml",
+		"/.vscode/settings.json", "/.idea/workspace.xml", "/.circleci/config.yml",
+		"/.github/workflows/main.yml", "/.gitlab-ci.yml", "/.travis.yml",
+		"/Jenkinsfile", "/capfile", "/Procfile", "/Gemfile", "/Gemfile.lock",
+		"/requirements.txt", "/pipfile", "/pipfile.lock", "/go.mod", "/go.sum",
+		"/cargo.toml", "/cargo.lock", "/composer.json", "/composer.lock",
+		"/package-lock.json", "/yarn.lock", "/pnpm-lock.yaml",
+		"/api/v1/upload", "/api/v1/download", "/api/v1/file", "/api/v1/media",
+		"/api/v1/image", "/api/v1/video", "/api/v1/stream", "/api/v1/ws",
+		"/api/v1/socket", "/api/v1/rpc", "/api/v1/subscription", "/api/v1/billing",
+		"/api/v1/payment", "/api/v1/order", "/api/v1/invoice", "/api/v1/report",
+		"/api/v1/search", "/api/v1/query", "/api/v1/filter", "/api/v1/sort",
+		"/api/v1/page", "/api/v1/limit", "/api/v1/offset", "/api/v1/detail",
+		"/api/v1/list", "/api/v1/create", "/api/v1/update", "/api/v1/delete",
+		"/api/v1/patch", "/api/v1/options", "/api/v1/head",
 	}...)
 
 	pathsAPI = []string{
@@ -118,6 +141,8 @@ var (
 // GetPack returns the subdomain and path sets for a given pack name.
 func GetPack(name string) ([]string, []string) {
 	switch strings.ToLower(name) {
+	case "ultra":
+		return subdomainsUltra, pathsUltra
 	case "full":
 		return subdomainsComprehensive, pathsComprehensive
 	case "dns-extended":

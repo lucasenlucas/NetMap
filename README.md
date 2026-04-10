@@ -59,7 +59,7 @@ netmap -d <domain> [options]
 | Flag            | Description                            |
 | --------------- | -------------------------------------- |
 | `-d, --domain`  | Target domain                          |
-| `-p, --pack`    | Discovery Pack (`standard`, `dns-extended`, `web-deep`, `api-focused`, `admin-stealth`, `full`) |
+| `-p, --pack`    | Discovery Pack (`standard`, `dns-extended`, `web-deep`, `api-focused`, `admin-stealth`, `full`, `ultra`) |
 | `-w, --wordlist`| Path to custom local wordlist (.txt)   |
 | `-f, --focus`   | Filter (`all`, `auth`, `admin`, `api`, `config`, `dev`) |
 | `-o, --output`  | `text` | `json`                        |
@@ -67,19 +67,20 @@ netmap -d <domain> [options]
 | `-v, --verbose` | Debug output                           |
 
 ## Core Features
-### map — Full Structure Mapping
+### ultra — Maximum Recon
 ```
-netmap -d example.com -p full
+netmap -d example.com -p ultra
 ```
+The **Ultra Intelligence Engine** uses over 2500+ combined targets for deep infrastructure mapping.
+
+### Live Feedback
+NetMap provides real-time terminal progress during high-volume scans:
+`[~] Mapping: 12/50 hosts | 452/2500 endpoints | [Checking: /api/v2/config]`
 
 ### focus — Targeted View
 ```
 netmap -d example.com -f config
 netmap -d example.com -f dev
-```
-### export — Data Output
-```
-netmap -d example.com -o json > map.json
 ```
 
 ## How it works
@@ -89,7 +90,7 @@ Uses Certificate Transparency logs (e.g. crt.sh)
 
 ### Live Probing
 Performs concurrent HTTP requests
-→ detects active endpoints and validates responses. The **Full Intelligence Engine** uses over 700+ combined targets.
+→ detects active endpoints and validates responses. 
 
 ### Classification (Categorical Intelligence)
 Endpoints are labeled automatically:
@@ -99,24 +100,6 @@ Endpoints are labeled automatically:
 * `[CONFIG]` → Sensitive configuration files (.env, settings)
 * `[DEV]` → Development artifacts (.git, Dockerfiles)
 * `[GENERAL]` → standard paths
-
-### Output Example
-```
-╔══════════════════════════════════════════╗
-║           NetMap — Mapping               ║
-╚══════════════════════════════════════════╝
-
-example.com
-├── api.example.com
-│   ├── /v1/users [API]
-│   └── /auth/login [AUTH]
-├── admin.example.com
-│   └── /login [ADMIN]
-├── dev.example.com
-│   └── /.env [CONFIG]
-└── www.example.com
-    └── /dashboard
-```
 
 ## Author
 Built by Lucas Mangroelal 

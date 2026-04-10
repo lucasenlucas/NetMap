@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/lucas/netmap/internal/classifier"
@@ -26,6 +27,14 @@ type Mapper struct {
 	Mode           models.FocusMode
 	PackName       string
 	CustomWordlist string
+	
+	// Progress Tracking
+	totalSubs       int32
+	completedSubs   int32
+	totalPaths      int32
+	completedPaths  int32
+	activeHost      string
+	
 	mu             sync.Mutex
 	client         *http.Client
 }
@@ -56,19 +65,13 @@ func (m *Mapper) Run() {
 		Type:  models.RootNode,
 	})
 
-	fmt.Fprintf(os.Stderr, "[~] Initializing discovery for %s...\n", m.Graph.Target.Domain)
-	if m.PackName != "" && m.PackName != "standard" {
-		fmt.Fprintf(os.Stderr, "[~] Active Pack: %s\n", m.PackName)
-	}
+	fmt.Fprintf(os.Stderr, "[~] Initializing NetMap Intelligence for %s...\n", m.Graph.Target.Domain)
 
 	// 2. Resolve Discovery Lists
 	subList, pathList := discovery.GetPack(m.PackName)
 	if m.CustomWordlist != "" {
-		fmt.Fprintf(os.Stderr, "[~] Loading custom wordlist: %s\n", m.CustomWordlist)
 		custom, err := discovery.LoadWordlistFromFile(m.CustomWordlist)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "[!] Error loading wordlist: %v\n", err)
-		} else {
+		if err == nil {
 			pathList = append(pathList, custom...)
 		}
 	}
@@ -76,29 +79,29 @@ func (m *Mapper) Run() {
 	// 3. Discover Subdomains
 	subdomains := m.discoverSubdomains(subList)
 	subdomains = append([]string{m.Graph.Target.Domain}, subdomains...)
+	atomic.StoreInt32(&m.totalSubs, int32(len(subdomains)))
+	atomic.StoreInt32(&m.totalPaths, int32(len(pathList)*len(subdomains)))
 
-	fmt.Fprintf(os.Stderr, "[~] Discovered %d unique hosts. Commencing active service mapping...\n", len(subdomains))
+	// 4. Start Live Progress Reporter
+	stopProgress := make(chan struct{})
+	go m.progressReporter(stopProgress)
 
-	// 4. Multi-threaded Processing with Concurrency Limit
-	var wg sync.WaitGroup
-	
-	// Dynamic Concurrency based on Pack
-	subLimit := 50
-	epLimit := 10
-	if m.PackName == "full" {
-		subLimit = 100 // Scale out for full scans
-		epLimit = 15
+	// 5. Global Concurrency Management
+	globalLimit := 100
+	if m.PackName == "ultra" {
+		globalLimit = 250 // Max volume for Ultra mode
 	}
-	semaphore := make(chan struct{}, subLimit)
+	globalSemaphore := make(chan struct{}, globalLimit)
 
+	var wg sync.WaitGroup
 	for _, sub := range subdomains {
 		wg.Add(1)
 		go func(subdomain string) {
 			defer wg.Done()
-			semaphore <- struct{}{}
-			defer func() { <-semaphore }()
-
+			
 			if !m.isAlive(subdomain) {
+				atomic.AddInt32(&m.completedSubs, 1)
+				atomic.AddInt32(&m.completedPaths, int32(len(pathList)))
 				return
 			}
 
@@ -117,13 +120,13 @@ func (m *Mapper) Run() {
 
 			// Endpoint enumeration
 			var epWg sync.WaitGroup
-			epSemaphore := make(chan struct{}, epLimit)
 			for _, ep := range pathList {
 				epWg.Add(1)
+				globalSemaphore <- struct{}{}
 				go func(endpoint string) {
 					defer epWg.Done()
-					epSemaphore <- struct{}{}
-					defer func() { <-epSemaphore }()
+					defer func() { <-globalSemaphore }()
+					m.setHost(subdomain)
 
 					if m.probeEndpoint(subdomain, endpoint) {
 						epID := fmt.Sprintf("ep-%s-%s", subdomain, endpoint)
@@ -136,20 +139,45 @@ func (m *Mapper) Run() {
 						})
 						m.addEdgeSafe(subID, epID, "has_endpoint")
 					}
+					atomic.AddInt32(&m.completedPaths, 1)
 				}(ep)
 			}
 			epWg.Wait()
+			atomic.AddInt32(&m.completedSubs, 1)
 		}(sub)
 	}
 
 	wg.Wait()
+	close(stopProgress)
+	time.Sleep(200 * time.Millisecond) // Catch final render
+	fmt.Fprintf(os.Stderr, "\r%s\r", strings.Repeat(" ", 80)) 
+}
+
+func (m *Mapper) progressReporter(stop chan struct{}) {
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-stop:
+			return
+		case <-ticker.C:
+			subs := atomic.LoadInt32(&m.completedSubs)
+			totalSubs := atomic.LoadInt32(&m.totalSubs)
+			paths := atomic.LoadInt32(&m.completedPaths)
+			totalPaths := atomic.LoadInt32(&m.totalPaths)
+			host := m.getHost()
+
+			fmt.Fprintf(os.Stderr, "\r\033[36m[~] Mapping: %d/%d hosts | %d/%d endpoints | [%s]\r\033[0m", 
+				subs, totalSubs, paths, totalPaths, truncate(host, 15))
+		}
+	}
 }
 
 func (m *Mapper) discoverSubdomains(wordlist []string) []string {
 	uniqueSubs := make(map[string]bool)
 	var finalSubs []string
 
-	// OSINT Phase
 	fmt.Fprintf(os.Stderr, "[+] Gathering OSINT intelligence (crt.sh)...\n")
 	for _, s := range m.fetchOSINTSubdomains(m.Graph.Target.Domain) {
 		if !uniqueSubs[s] {
@@ -158,14 +186,11 @@ func (m *Mapper) discoverSubdomains(wordlist []string) []string {
 		}
 	}
 
-	// DNS Phase
-	if m.Mode == "advanced" || m.PackName == "dns-extended" || m.PackName == "full" {
+	if m.Mode == "advanced" || m.PackName == "dns-extended" || m.PackName == "full" || m.PackName == "ultra" {
 		fmt.Fprintf(os.Stderr, "[+] Triggering DNS brute-force discovery (%d candidates)...\n", len(wordlist))
 		var dnsWg sync.WaitGroup
 		dnsMu := sync.Mutex{}
-		
-		// DNS Concurrency limit
-		dnsSemaphore := make(chan struct{}, 100)
+		dnsSemaphore := make(chan struct{}, 150)
 
 		for _, prefix := range wordlist {
 			dnsWg.Add(1)
@@ -188,10 +213,10 @@ func (m *Mapper) discoverSubdomains(wordlist []string) []string {
 		dnsWg.Wait()
 	}
 
-	limit := 25
-	if m.Mode == "advanced" || m.PackName == "full" {
-		limit = 250 // High discovery ceiling for full scans
-	}
+	limit := 30
+	if m.PackName == "full" { limit = 150 }
+	if m.PackName == "ultra" { limit = 500 }
+
 	if len(finalSubs) > limit {
 		finalSubs = finalSubs[:limit]
 	}
@@ -202,23 +227,17 @@ func (m *Mapper) discoverSubdomains(wordlist []string) []string {
 func (m *Mapper) fetchOSINTSubdomains(domain string) []string {
 	url := fmt.Sprintf("https://crt.sh/?q=%%25.%s&output=json", domain)
 	resp, err := m.client.Get(url)
-	if err != nil || resp.StatusCode != 200 {
-		return []string{}
-	}
+	if err != nil || resp.StatusCode != 200 { return []string{} }
 	defer resp.Body.Close()
 
 	var results []CrtShResponse
-	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
-		return []string{}
-	}
+	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil { return []string{} }
 
 	var subs []string
 	for _, r := range results {
 		sub := strings.ReplaceAll(r.NameValue, "*.", "")
 		sub = strings.TrimSpace(sub)
-		if strings.Contains(sub, "\n") {
-			sub = strings.Split(sub, "\n")[0]
-		}
+		if strings.Contains(sub, "\n") { sub = strings.Split(sub, "\n")[0] }
 		if sub != "" && sub != domain && !strings.Contains(sub, "@") && !strings.Contains(sub, " ") {
 			subs = append(subs, sub)
 		}
@@ -228,37 +247,22 @@ func (m *Mapper) fetchOSINTSubdomains(domain string) []string {
 
 func (m *Mapper) isAlive(host string) bool {
 	resp, err := m.client.Head("https://" + host)
-	if err == nil {
-		resp.Body.Close()
-		return true
-	}
+	if err == nil { resp.Body.Close(); return true }
 	resp, err = m.client.Head("http://" + host)
-	if err == nil {
-		resp.Body.Close()
-		return true
-	}
+	if err == nil { resp.Body.Close(); return true }
 	return false
 }
 
 func (m *Mapper) probeEndpoint(host, path string) bool {
-	if !strings.HasPrefix(path, "/") {
-		path = "/" + path
-	}
-	urls := []string{"https://" + host + path, "http://" + host + path}
-	for _, u := range urls {
-		req, _ := http.NewRequest("GET", u, nil)
-		req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; NetMap/1.0; +https://github.com/lucasmangroelal)")
-		resp, err := m.client.Do(req)
-		if err != nil {
-			continue
-		}
-		status := resp.StatusCode
-		resp.Body.Close()
-		if (status >= 200 && status < 300) || status == 401 || status == 403 {
-			return true
-		}
-	}
-	return false
+	if !strings.HasPrefix(path, "/") { path = "/" + path }
+	u := "https://" + host + path
+	req, _ := http.NewRequest("GET", u, nil)
+	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; NetMap/1.0; +https://github.com/lucasenlucas/NetMap)")
+	resp, err := m.client.Do(req)
+	if err != nil { return false }
+	status := resp.StatusCode
+	resp.Body.Close()
+	return (status >= 200 && status < 300) || status == 401 || status == 403
 }
 
 func (m *Mapper) addNode(n models.Node) {
@@ -279,4 +283,21 @@ func (m *Mapper) addEdgeSafe(source, target, rel string) {
 		Target:           target,
 		RelationshipType: rel,
 	})
+}
+
+func (m *Mapper) setHost(h string) {
+	m.mu.Lock()
+	m.activeHost = h
+	m.mu.Unlock()
+}
+
+func (m *Mapper) getHost() string {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.activeHost
+}
+
+func truncate(s string, n int) string {
+	if len(s) <= n { return s }
+	return s[:n-3] + "..."
 }
