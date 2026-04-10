@@ -10,7 +10,6 @@ Paste this single command in your terminal to instantly install the latest versi
 curl -fsSL https://raw.githubusercontent.com/lucasenlucas/NetMap/main/install.sh | sh
 ```
 
-*(You might be prompted for your password to install into `/usr/local/bin`)*
 
 ## Windows
 Go to [Releases](https://github.com/lucasenlucas/NetMap/releases) and download the `.exe` directly.
