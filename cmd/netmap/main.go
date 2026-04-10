@@ -11,6 +11,15 @@ import (
 	"github.com/lucas/netmap/internal/output"
 )
 
+const banner = `
+    _   __     __  __  ___          
+   / | / /__  / /_/  |/  /___ _____ 
+  /  |/ / _ \/ __/ /|_/ / __ ` + "`" + `/ __ \
+ / /|  /  __/ /_/ /  / / /_/ / /_/ /
+/_/ |_/\___/\__/_/  /_/\__,_/ .___/ 
+                           /_/      
+`
+
 func main() {
 	var domain string
 	var mode string
@@ -27,11 +36,28 @@ func main() {
 	flag.StringVar(&focus, "f", "all", "Focus mode (all, auth, admin, api)")
 	flag.StringVar(&focus, "focus", "all", "Focus mode (all, auth, admin, api)")
 	flag.BoolVar(&verbose, "v", false, "Verbose output")
+
+	flag.Usage = func() {
+		fmt.Printf("%s%s%s\n", output.Cyan, banner, output.Reset)
+		fmt.Println("NetMap Intelligence Toolkit - Visual Network Mapper")
+		fmt.Println("\nUsage:")
+		fmt.Println("  netmap -d <target> [flags]")
+		fmt.Println("\nFlags:")
+		fmt.Println("  -d, --domain string   Target domain to map (e.g., example.com)")
+		fmt.Println("  -f, --focus string    Focus mode: all, auth, admin, api (default \"all\")")
+		fmt.Println("  -o, --output string   Output format: text, json (default \"text\")")
+		fmt.Println("  -m, --mode string     Mapping mode: basic, advanced (default \"basic\")")
+		fmt.Println("  -v, --verbose         Enable verbose debug output")
+		fmt.Println("\nExamples:")
+		fmt.Println("  netmap -d hackerone.com")
+		fmt.Println("  netmap -d example.com -f auth")
+		fmt.Println("  netmap -d api.example.com -o json\n")
+	}
+
 	flag.Parse()
 
 	if domain == "" {
-		fmt.Println("Error: Target domain is required.")
-		fmt.Println("Usage: netmap -d <domain>")
+		flag.Usage()
 		os.Exit(1)
 	}
 
