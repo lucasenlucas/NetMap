@@ -64,7 +64,7 @@ fi
 
 echo ""
 echo "  ✓ NetMap installed successfully!"
-echo "  Run: netmap -d example.com"
+echo "  Run: netmap --help"
 echo ""
 echo "  NetMap Intelligence Toolkit"
 echo ""

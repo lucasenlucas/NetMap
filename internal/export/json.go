@@ -8,31 +8,31 @@ import (
 	"github.com/lucas/netmap/internal/models"
 )
 
-// ExportWrapper encapsulates the graph payload with metadata ensuring readiness for frontend consumption.
+// ExportWrapper encapsulates the graph payload in a flattened format ready for frontend consumption.
 type ExportWrapper struct {
-	Version   string           `json:"version"`
-	Generated string           `json:"generated_at"`
-	Target    string           `json:"target_domain"`
-	Summary   ExportSummary    `json:"summary"`
-	Graph     *models.MapGraph `json:"graph"`
+	Nodes    []models.Node  `json:"nodes"`
+	Edges    []models.Edge  `json:"edges"`
+	Metadata ExportMetadata `json:"metadata"`
 }
 
-type ExportSummary struct {
-	TotalNodes int `json:"total_nodes"`
-	TotalEdges int `json:"total_edges"`
+type ExportMetadata struct {
+	Domain     string `json:"domain"`
+	TotalNodes int    `json:"totalNodes"`
+	Generated  string `json:"generatedAt"`
+	Version    string `json:"version"`
 }
 
 // PrintJSON outputs the map graph as a formatted JSON structure.
 func PrintJSON(graph *models.MapGraph) {
 	wrapper := ExportWrapper{
-		Version:   "1.0.0",
-		Generated: time.Now().UTC().Format(time.RFC3339),
-		Target:    graph.Target.Domain,
-		Summary: ExportSummary{
+		Nodes: graph.Nodes,
+		Edges: graph.Edges,
+		Metadata: ExportMetadata{
+			Domain:     graph.Target.Domain,
 			TotalNodes: len(graph.Nodes),
-			TotalEdges: len(graph.Edges),
+			Generated:  time.Now().UTC().Format(time.RFC3339),
+			Version:    "1.0.0",
 		},
-		Graph: graph,
 	}
 
 	bytes, err := json.MarshalIndent(wrapper, "", "  ")

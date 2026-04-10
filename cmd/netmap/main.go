@@ -12,12 +12,12 @@ import (
 )
 
 const banner = `
-    _   __     __  __  ___          
-   / | / /__  / /_/  |/  /___ _____ 
-  /  |/ / _ \/ __/ /|_/ / __ ` + "`" + `/ __ \
- / /|  /  __/ /_/ /  / / /_/ / /_/ /
-/_/ |_/\___/\__/_/  /_/\__,_/ .___/ 
-                           /_/      
+ ███╗   ██╗███████╗████████╗███╗   ███╗ █████╗ ██████╗ 
+ ████╗  ██║██╔════╝╚══██╔══╝████╗ ████║██╔══██╗██╔══██╗
+ ██╔██╗ ██║█████╗     ██║   ██╔████╔██║███████║██████╔╝
+ ██║╚██╗██║██╔══╝     ██║   ██║╚██╔╝██║██╔══██║██╔═══╝ 
+ ██║ ╚████║███████╗   ██║   ██║ ╚═╝ ██║██║  ██║██║     
+ ╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     
 `
 
 func main() {
@@ -27,31 +27,31 @@ func main() {
 	var focus string
 	var verbose bool
 
-	flag.StringVar(&domain, "d", "", "Target domain (e.g., example.com)")
-	flag.StringVar(&domain, "domain", "", "Target domain (e.g., example.com)")
-	flag.StringVar(&mode, "m", "basic", "Mapping mode (basic, advanced)")
-	flag.StringVar(&mode, "mode", "basic", "Mapping mode (basic, advanced)")
-	flag.StringVar(&outFormat, "o", "text", "Output format (text, json)")
-	flag.StringVar(&outFormat, "output", "text", "Output format (text, json)")
-	flag.StringVar(&focus, "f", "all", "Focus mode (all, auth, admin, api)")
-	flag.StringVar(&focus, "focus", "all", "Focus mode (all, auth, admin, api)")
-	flag.BoolVar(&verbose, "v", false, "Verbose output")
+	flag.StringVar(&domain, "d", "", "")
+	flag.StringVar(&domain, "domain", "", "")
+	flag.StringVar(&mode, "m", "basic", "")
+	flag.StringVar(&mode, "mode", "basic", "")
+	flag.StringVar(&outFormat, "o", "text", "")
+	flag.StringVar(&outFormat, "output", "text", "")
+	flag.StringVar(&focus, "f", "all", "")
+	flag.StringVar(&focus, "focus", "all", "")
+	flag.BoolVar(&verbose, "v", false, "")
 
 	flag.Usage = func() {
 		fmt.Printf("%s%s%s\n", output.Cyan, banner, output.Reset)
-		fmt.Println("NetMap Intelligence Toolkit - Visual Network Mapper")
-		fmt.Println("\nUsage:")
+		fmt.Printf("%sNetMap Intelligence Toolkit - Visual Network Mapper%s\n", output.Bold, output.Reset)
+		fmt.Println("\nGebruik:")
 		fmt.Println("  netmap -d <target> [flags]")
 		fmt.Println("\nFlags:")
-		fmt.Println("  -d, --domain string   Target domain to map (e.g., example.com)")
-		fmt.Println("  -f, --focus string    Focus mode: all, auth, admin, api (default \"all\")")
-		fmt.Println("  -o, --output string   Output format: text, json (default \"text\")")
-		fmt.Println("  -m, --mode string     Mapping mode: basic, advanced (default \"basic\")")
-		fmt.Println("  -v, --verbose         Enable verbose debug output")
-		fmt.Println("\nExamples:")
-		fmt.Println("  netmap -d hackerone.com")
-		fmt.Println("  netmap -d example.com -f auth")
-		fmt.Println("  netmap -d api.example.com -o json\n")
+		fmt.Println("  -d, --domain string   De website die je wilt analyseren. (Verplicht)")
+		fmt.Println("  -f, --focus string    Focus modus: all, auth, admin, api (standaard \"all\")")
+		fmt.Println("  -o, --output string    Output formaat: text, json (standaard \"text\")")
+		fmt.Println("  -m, --mode string      Mapping modus: basic, advanced (standaard \"basic\")")
+		fmt.Println("  -v, --verbose          Toon debug logging (OSINT, HTTP responses, errors)")
+		fmt.Println("\nVoorbeelden:")
+		fmt.Println("  netmap -d voorbeeld.nl")
+		fmt.Println("  netmap -d voorbeeld.nl -f admin")
+		fmt.Println("  netmap -d voorbeeld.nl -o json > scan.json\n")
 	}
 
 	flag.Parse()
@@ -62,8 +62,8 @@ func main() {
 	}
 
 	if verbose {
-		fmt.Printf("[DEBUG] Starting NetMap for target: %s\n", domain)
-		fmt.Printf("[DEBUG] Mode: %s, Output: %s, Focus: %s\n", mode, outFormat, focus)
+		fmt.Fprintf(os.Stderr, "[DEBUG] Starting NetMap for target: %s\n", domain)
+		fmt.Fprintf(os.Stderr, "[DEBUG] Mode: %s, Output: %s, Focus: %s\n", mode, outFormat, focus)
 	}
 
 	// Initialize Mapper Graph
