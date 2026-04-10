@@ -68,50 +68,55 @@ netmap -d <domain> [options]
 
 ## Power Usage & Examples
 
-### 🚀 The Ultra Scan (Krachtigste Command)
-Gebruik dit voor de meest complete mapping van een target. Het combineert de grootste intelligentie-set met diepe DNS-reconstructie.
+### 🚀 The Ultra Scan (Most Powerful Command)
+Use this for the most complete mapping of a target. It combines the largest intelligence set (2500+ targets) with deep DNS reconstruction and brute-forcing.
 ```bash
-netmap -d voorbeeld.nl -p ultra -m advanced
+netmap -d example.com -p ultra -m advanced
 ```
-* **Wat gebeurt er?**: Scant 2500+ targets, voert DNS brute-forcing uit en haalt alle CNAME/MX/TXT records op.
+* **What happens?**: Scans 2500+ targets, performs high-volume DNS brute-forcing, and retrieves all CNAME/MX/TXT records.
 
 ### 🏢 Infrastructure Only
-Filter alle web-ruis weg en bekijk puur de DNS-architectuur en providers.
+Filter out all web noise and view pure DNS architecture and service providers.
 ```bash
-netmap -d voorbeeld.nl -f dns
+netmap -d example.com -f dns
 ```
-* **Wat gebeurt er?**: Toont alleen de infrastructuur-nodes zoals mailservers en CDN-aliassen.
+* **What happens?**: Displays only infrastructure nodes like mail handlers (MX) and CDN aliases (CNAME).
 
 ### 🔓 Security Audit
-Focus op gevoelige configuraties en development artifacts.
+Focus specifically on sensitive configurations and development artifacts.
 ```bash
-netmap -d voorbeeld.nl -p full -f config
+netmap -d example.com -p full -f config
 ```
-* **Wat gebeurt er?**: Zoekt specifiek naar `.env`, `wp-config`, `.git` mappen en andere risico-punten.
+* **What happens?**: Searches specifically for `.env`, `wp-config`, `.git` folders, and other high-risk points.
 
 ### 🤖 Automation / JSON Export
-Exporteer de volledige graaf naar JSON voor gebruik in externe visualisatie-tools of pipelines.
+Export the full graph to JSON for use in external visualization tools or analysis pipelines.
 ```bash
-netmap -d voorbeeld.nl -o json > map.json
+netmap -d example.com -o json > map.json
 ```
 
 ## How it works
 ### OSINT Discovery
-Uses Certificate Transparency logs (e.g. crt.sh)
-→ finds known subdomains without directly targeting the server
+Uses Certificate Transparency logs (e.g., crt.sh)
+→ finds known subdomains without directly targeting the server.
 
 ### Live Probing & DNS Mapping
 Performs concurrent HTTP requests and **Deep DNS Lookups**.
-→ detects active endpoints and validates infrastructure records.
+→ detects active endpoints and validates infrastructure records in real-time.
+
+### Live Progress Tracking
+NetMap provides real-time terminal feedback during high-volume scans:
+`[~] Mapping: 12/50 hosts | 452/2500 endpoints | [Checking: /api/v2/config]`
 
 ### Classification (Categorical Intelligence)
-Endpoints are labeled automatically:
+Endpoints are labeled automatically based on their nature:
 * `[AUTH]` → login / authentication
-* `[ADMIN]` → admin panels
+* `[ADMIN]` → administrative panels
 * `[API]` → API routes
-* `[DNS]` → CNAME, MX, TXT records
+* `[DNS]` → Infrastructure records (CNAME, MX, TXT)
 * `[CONFIG]` → Sensitive configuration files (.env, settings)
 * `[DEV]` → Development artifacts (.git, Dockerfiles)
+* `[GENERAL]` → Standard web paths
 
 ## Author
 Built by Lucas Mangroelal 
