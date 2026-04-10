@@ -22,20 +22,24 @@ type CrtShResponse struct {
 
 // Mapper Engine handles constructing the live map graph.
 type Mapper struct {
-	Graph  models.MapGraph
-	Mode   models.FocusMode // We use FocusMode or a dedicated Mode type; Let's reuse models or define basic/advanced
-	mu     sync.Mutex
-	client *http.Client
+	Graph          models.MapGraph
+	Mode           models.FocusMode
+	PackName       string
+	CustomWordlist string
+	mu             sync.Mutex
+	client         *http.Client
 }
 
-func NewMapper(domain string, mode string) *Mapper {
+func NewMapper(domain string, mode string, pack string, customWordlist string) *Mapper {
 	return &Mapper{
 		Graph: models.MapGraph{
 			Target: models.DomainTarget{Domain: domain},
 			Nodes:  []models.Node{},
 			Edges:  []models.Edge{},
 		},
-		Mode: models.FocusMode(mode),
+		Mode:           models.FocusMode(mode),
+		PackName:       pack,
+		CustomWordlist: customWordlist,
 		client: &http.Client{
 			Timeout: 5 * time.Second,
 		},
@@ -53,24 +57,31 @@ func (m *Mapper) Run() {
 	})
 
 	fmt.Fprintf(os.Stderr, "[~] Initializing discovery for %s...\n", m.Graph.Target.Domain)
+	if m.PackName != "" && m.PackName != "standard" {
+		fmt.Fprintf(os.Stderr, "[~] Active Pack: %s\n", m.PackName)
+	}
 
-	// 2. Discover Subdomains
-	subdomains := m.discoverSubdomains()
-	
-	// Ensure root domain is always checked
+	// 2. Resolve Discovery Lists
+	subList, pathList := discovery.GetPack(m.PackName)
+	if m.CustomWordlist != "" {
+		fmt.Fprintf(os.Stderr, "[~] Loading custom wordlist: %s\n", m.CustomWordlist)
+		custom, err := discovery.LoadWordlistFromFile(m.CustomWordlist)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "[!] Error loading wordlist: %v\n", err)
+		} else {
+			pathList = append(pathList, custom...)
+		}
+	}
+
+	// 3. Discover Subdomains
+	subdomains := m.discoverSubdomains(subList)
 	subdomains = append([]string{m.Graph.Target.Domain}, subdomains...)
 
-	fmt.Fprintf(os.Stderr, "[~] Discovered %d unique subdomains. Commencing active probing...\n", len(subdomains)-1)
-
-	// 3. Define Endpoints to Check
-	endpointsToCheck := []string{"/", "/admin", "/login", "/dashboard", "/api", "/api/v1", "/graphql", "/auth"}
-	if m.Mode == "advanced" {
-		endpointsToCheck = discovery.GetPaths()
-	}
+	fmt.Fprintf(os.Stderr, "[~] Discovered %d unique hosts. Commencing active service mapping...\n", len(subdomains))
 
 	// 4. Multi-threaded Processing with Concurrency Limit
 	var wg sync.WaitGroup
-	semaphore := make(chan struct{}, 50) // Max 50 concurrent subdomain tasks
+	semaphore := make(chan struct{}, 50)
 
 	for _, sub := range subdomains {
 		wg.Add(1)
@@ -79,7 +90,6 @@ func (m *Mapper) Run() {
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
 
-			// Quick alive check
 			if !m.isAlive(subdomain) {
 				return
 			}
@@ -97,11 +107,10 @@ func (m *Mapper) Run() {
 				subID = rootID
 			}
 
-			// Endpoint enumeration with sub-semaphore
+			// Endpoint enumeration
 			var epWg sync.WaitGroup
-			epSemaphore := make(chan struct{}, 10) // Max 10 concurrent endpoint probes per subdomain
-
-			for _, ep := range endpointsToCheck {
+			epSemaphore := make(chan struct{}, 10)
+			for _, ep := range pathList {
 				epWg.Add(1)
 				go func(endpoint string) {
 					defer epWg.Done()
@@ -128,27 +137,25 @@ func (m *Mapper) Run() {
 	wg.Wait()
 }
 
-func (m *Mapper) discoverSubdomains() []string {
+func (m *Mapper) discoverSubdomains(wordlist []string) []string {
 	uniqueSubs := make(map[string]bool)
 	var finalSubs []string
 
-	// Phase 1: OSINT (Always)
-	fmt.Fprintf(os.Stderr, "[+] Querying OSINT intelligence (crt.sh)...\n")
-	osintSubs := m.fetchOSINTSubdomains(m.Graph.Target.Domain)
-	for _, s := range osintSubs {
+	// OSINT Phase
+	fmt.Fprintf(os.Stderr, "[+] Gathering OSINT intelligence (crt.sh)...\n")
+	for _, s := range m.fetchOSINTSubdomains(m.Graph.Target.Domain) {
 		if !uniqueSubs[s] {
 			uniqueSubs[s] = true
 			finalSubs = append(finalSubs, s)
 		}
 	}
 
-	// Phase 2: DNS Brute Force (Only in Advanced Mode)
-	if m.Mode == "advanced" {
-		fmt.Fprintf(os.Stderr, "[+] Commencing DNS discovery for top 50 subdomains...\n")
+	// DNS Phase (if advanced OR specific pack that needs it)
+	if m.Mode == "advanced" || m.PackName == "dns-extended" {
+		fmt.Fprintf(os.Stderr, "[+] Triggering DNS brute-force discovery...\n")
 		var dnsWg sync.WaitGroup
 		dnsMu := sync.Mutex{}
-		
-		for _, prefix := range discovery.GetSubdomains() {
+		for _, prefix := range wordlist {
 			dnsWg.Add(1)
 			go func(p string) {
 				defer dnsWg.Done()
@@ -166,10 +173,9 @@ func (m *Mapper) discoverSubdomains() []string {
 		dnsWg.Wait()
 	}
 
-	// Cap for stability if not in advanced mode, or higher cap in advanced
-	limit := 15
+	limit := 20
 	if m.Mode == "advanced" {
-		limit = 100
+		limit = 150
 	}
 	if len(finalSubs) > limit {
 		finalSubs = finalSubs[:limit]
@@ -205,7 +211,6 @@ func (m *Mapper) fetchOSINTSubdomains(domain string) []string {
 	return subs
 }
 
-// isAlive checks port 443 then 80
 func (m *Mapper) isAlive(host string) bool {
 	resp, err := m.client.Head("https://" + host)
 	if err == nil {
@@ -221,6 +226,9 @@ func (m *Mapper) isAlive(host string) bool {
 }
 
 func (m *Mapper) probeEndpoint(host, path string) bool {
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
 	urls := []string{"https://" + host + path, "http://" + host + path}
 	for _, u := range urls {
 		req, _ := http.NewRequest("GET", u, nil)
