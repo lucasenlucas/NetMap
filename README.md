@@ -49,15 +49,6 @@ netmap --help
 go install github.com/lucasenlucas/netmap/cmd/netmap@latest
 ```
 
-### Manual build
-```
-git clone https://github.com/lucasenlucas/NetMap.git
-cd NetMap
-go mod tidy
-go build -o netmap ./cmd/netmap
-./netmap -d example.com
-```
-
 ## CLI Philosophy
 Same system as NetScope & NetForce → no learning curve.
 ```
@@ -68,32 +59,27 @@ netmap -d <domain> [options]
 | Flag            | Description                            |
 | --------------- | -------------------------------------- |
 | `-d, --domain`  | Target domain                          |
-| `-p, --pack`    | Discovery Pack (`standard`, `dns-extended`, `web-deep`, `api-focused`, `admin-stealth`) |
+| `-p, --pack`    | Discovery Pack (`standard`, `dns-extended`, `web-deep`, `api-focused`, `admin-stealth`, `full`) |
 | `-w, --wordlist`| Path to custom local wordlist (.txt)   |
-| `-f, --focus`   | Filter (`all`, `auth`, `admin`, `api`) |
+| `-f, --focus`   | Filter (`all`, `auth`, `admin`, `api`, `config`, `dev`) |
 | `-o, --output`  | `text` | `json`                        |
 | `-m, --mode`    | `basic` | `advanced`                   |
 | `-v, --verbose` | Debug output                           |
 
 ## Core Features
-map - Full Structure Mapping
+### map — Full Structure Mapping
 ```
-netmap -d example.com
+netmap -d example.com -p full
 ```
 
 ### focus — Targeted View
 ```
-netmap -d example.com -f auth
-netmap -d example.com -f admin
+netmap -d example.com -f config
+netmap -d example.com -f dev
 ```
 ### export — Data Output
 ```
 netmap -d example.com -o json > map.json
-```
-
-### advanced — Deeper Mapping
-```
-netmap -d example.com -m advanced
 ```
 
 ## How it works
@@ -103,18 +89,16 @@ Uses Certificate Transparency logs (e.g. crt.sh)
 
 ### Live Probing
 Performs concurrent HTTP requests
-→ detects active endpoints and validates responses
+→ detects active endpoints and validates responses. The **Full Intelligence Engine** uses over 700+ combined targets.
 
-### Classification
+### Classification (Categorical Intelligence)
 Endpoints are labeled automatically:
-* [AUTH] → login / authentication
-* [ADMIN] → admin panels
-* [API] → API routes
-* [GENERAL] → standard paths
-
-### Structuring
-All data is transformed into a hierarchical map
-→ from raw data → to clear structure
+* `[AUTH]` → login / authentication
+* `[ADMIN]` → admin panels
+* `[API]` → API routes
+* `[CONFIG]` → Sensitive configuration files (.env, settings)
+* `[DEV]` → Development artifacts (.git, Dockerfiles)
+* `[GENERAL]` → standard paths
 
 ### Output Example
 ```
@@ -128,47 +112,15 @@ example.com
 │   └── /auth/login [AUTH]
 ├── admin.example.com
 │   └── /login [ADMIN]
+├── dev.example.com
+│   └── /.env [CONFIG]
 └── www.example.com
     └── /dashboard
-
-Summary:
-- Subdomains:          3
-- Endpoints:           4
-- High-interest nodes: 2
 ```
-
-### Why NetMap?
-Most tools give you:
-* raw data
-* messy output
-* no structure
-NetMap gives you:
-* clarity
-* structure
-* visual understanding
-
-### Part of the NET Ecosystem
-* NetScope → discovery
-* NetForce → performance testing
-* NetIntel → analysis
-* NetMap → visualization
-Together: → a complete network analysis toolkit
-
-### Roadmap
-* Interactive web visualization
-* Node color highlighting (risk-based)
-* NetScope integration
-* NetIntel overlay
-* Graph export (nodes + edges)
 
 ## Author
 Built by Lucas Mangroelal 
 https://lucasmangroelal.nl
-
-## ❤️ Support
-* ⭐ Star the repo
-* 🔗 Share it
-* 🛠️ Contribute
 
 # ⚠️ Disclaimer
 **This tool is for educational and authorized use only. Do not use it against systems without permission.**

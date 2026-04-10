@@ -7,7 +7,6 @@ import (
 	"github.com/lucas/netmap/internal/models"
 )
 
-// ANSI color codes for elegant, premium rendering
 const (
 	Reset  = "\033[0m"
 	Bold   = "\033[1m"
@@ -16,6 +15,7 @@ const (
 	Cyan   = "\033[36m"
 	Gray   = "\033[90m"
 	Purple = "\033[35m"
+	Green  = "\033[32m"
 	White  = "\033[97m"
 )
 
@@ -44,55 +44,13 @@ func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
 		}
 	}
 
-	// Calculate maximum line length to align tags
-	maxLineLen := 0
-	for _, root := range roots {
-		var rootSubs []*models.Node
-		var rootEps []*models.Node
-		for _, child := range childrenMap[root.ID] {
-			if child.Type == models.SubdomainNode {
-				rootSubs = append(rootSubs, child)
-			} else if child.Type == models.EndpointNode {
-				if focus == models.FocusAll || string(child.Category) == string(focus) {
-					rootEps = append(rootEps, child)
-				}
-			}
-		}
+	// Dynamic padding
+	maxLineLen := 40 
+	padSpacing := maxLineLen + 10
 
-		for i, sub := range rootSubs {
-			isLastSub := (i == len(rootSubs)-1) && len(rootEps) == 0
-			subPrefix := "│   "
-			if isLastSub {
-				subPrefix = "    "
-			}
-
-			eps := childrenMap[sub.ID]
-			for _, ep := range eps {
-				if focus == models.FocusAll || string(ep.Category) == string(focus) {
-					lineStr := fmt.Sprintf("%s├── %s", subPrefix, ep.Label)
-					if len(lineStr) > maxLineLen {
-						maxLineLen = len(lineStr)
-					}
-				}
-			}
-		}
-
-		for _, ep := range rootEps {
-			lineStr := fmt.Sprintf("├── %s", ep.Label)
-			if len(lineStr) > maxLineLen {
-				maxLineLen = len(lineStr)
-			}
-		}
-	}
-
-	// Make sure padding exists
-	padSpacing := maxLineLen + 4
-
-	// Header
-	fmt.Printf("\n%sNetMap%s\n", Bold+Cyan, Reset)
+	fmt.Printf("\n%sNetMap Intelligence%s\n", Bold+Cyan, Reset)
 	fmt.Printf("Target: %s\n\n", graph.Target.Domain)
 
-	// Structure
 	for _, root := range roots {
 		fmt.Printf("%s%s%s\n", Bold, root.Label, Reset)
 		
@@ -102,7 +60,7 @@ func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
 			if child.Type == models.SubdomainNode {
 				rootSubs = append(rootSubs, child)
 			} else if child.Type == models.EndpointNode {
-				if focus == models.FocusAll || string(child.Category) == string(focus) {
+				if shouldShow(child, focus) {
 					rootEps = append(rootEps, child)
 				}
 			}
@@ -119,7 +77,7 @@ func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
 			eps := childrenMap[sub.ID]
 			var filteredEps []*models.Node
 			for _, ep := range eps {
-				if focus == models.FocusAll || string(ep.Category) == string(focus) {
+				if shouldShow(ep, focus) {
 					filteredEps = append(filteredEps, ep)
 				}
 			}
@@ -140,9 +98,7 @@ func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
 				fmt.Print(baseStr)
 
 				paddingList := padSpacing - len(baseStr)
-				if paddingList < 1 {
-					paddingList = 1
-				}
+				if paddingList < 1 { paddingList = 1 }
 				fmt.Print(strings.Repeat(" ", paddingList))
 				printCategoryLabel(ep.Category)
 				fmt.Println()
@@ -159,30 +115,33 @@ func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
 			fmt.Print(baseStr)
 
 			paddingList := padSpacing - len(baseStr)
-			if paddingList < 1 {
-				paddingList = 1
-			}
+			if paddingList < 1 { paddingList = 1 }
 			fmt.Print(strings.Repeat(" ", paddingList))
 			printCategoryLabel(ep.Category)
 			fmt.Println()
 		}
 	}
 
-	// Summary block
 	fmt.Printf("\n%sSummary%s\n", Bold, Reset)
 	fmt.Printf("  Domains:       %s%d%s\n", White, domainCount, Reset)
 	fmt.Printf("  Subdomains:    %s%d%s\n", White, subCount, Reset)
 	fmt.Printf("  Endpoints:     %s%d%s\n", White, endpointCount, Reset)
 	fmt.Printf("  High-Interest: %s%d%s\n", Yellow, interestCount, Reset)
-
 	if focus != models.FocusAll {
 		fmt.Printf("  Filter Focus:  %s%s%s\n", Cyan, focus, Reset)
 	}
 	fmt.Println()
 }
 
+func shouldShow(node *models.Node, focus models.FocusMode) bool {
+	if focus == models.FocusAll {
+		return true
+	}
+	return string(node.Category) == string(focus)
+}
+
 func isHighInterest(cat models.EndpointType) bool {
-	return cat == models.TypeAuth || cat == models.TypeAdmin || cat == models.TypeAPI
+	return cat == models.TypeAuth || cat == models.TypeAdmin || cat == models.TypeAPI || cat == models.TypeConfig || cat == models.TypeDev
 }
 
 func printCategoryLabel(cat models.EndpointType) {
@@ -193,6 +152,10 @@ func printCategoryLabel(cat models.EndpointType) {
 		fmt.Printf("%s[ADMIN]%s", Red, Reset)
 	case models.TypeAPI:
 		fmt.Printf("%s[API]%s", Cyan, Reset)
+	case models.TypeConfig:
+		fmt.Printf("%s[CONFIG]%s", Yellow, Reset)
+	case models.TypeDev:
+		fmt.Printf("%s[DEV]%s", Green, Reset)
 	case models.TypeGeneral:
 		fmt.Printf("%s[GENERAL]%s", Gray, Reset)
 	default:

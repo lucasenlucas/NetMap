@@ -81,7 +81,15 @@ func (m *Mapper) Run() {
 
 	// 4. Multi-threaded Processing with Concurrency Limit
 	var wg sync.WaitGroup
-	semaphore := make(chan struct{}, 50)
+	
+	// Dynamic Concurrency based on Pack
+	subLimit := 50
+	epLimit := 10
+	if m.PackName == "full" {
+		subLimit = 100 // Scale out for full scans
+		epLimit = 15
+	}
+	semaphore := make(chan struct{}, subLimit)
 
 	for _, sub := range subdomains {
 		wg.Add(1)
@@ -109,7 +117,7 @@ func (m *Mapper) Run() {
 
 			// Endpoint enumeration
 			var epWg sync.WaitGroup
-			epSemaphore := make(chan struct{}, 10)
+			epSemaphore := make(chan struct{}, epLimit)
 			for _, ep := range pathList {
 				epWg.Add(1)
 				go func(endpoint string) {
@@ -150,15 +158,22 @@ func (m *Mapper) discoverSubdomains(wordlist []string) []string {
 		}
 	}
 
-	// DNS Phase (if advanced OR specific pack that needs it)
-	if m.Mode == "advanced" || m.PackName == "dns-extended" {
-		fmt.Fprintf(os.Stderr, "[+] Triggering DNS brute-force discovery...\n")
+	// DNS Phase
+	if m.Mode == "advanced" || m.PackName == "dns-extended" || m.PackName == "full" {
+		fmt.Fprintf(os.Stderr, "[+] Triggering DNS brute-force discovery (%d candidates)...\n", len(wordlist))
 		var dnsWg sync.WaitGroup
 		dnsMu := sync.Mutex{}
+		
+		// DNS Concurrency limit
+		dnsSemaphore := make(chan struct{}, 100)
+
 		for _, prefix := range wordlist {
 			dnsWg.Add(1)
 			go func(p string) {
 				defer dnsWg.Done()
+				dnsSemaphore <- struct{}{}
+				defer func() { <-dnsSemaphore }()
+
 				sub := fmt.Sprintf("%s.%s", p, m.Graph.Target.Domain)
 				if _, err := net.LookupHost(sub); err == nil {
 					dnsMu.Lock()
@@ -173,9 +188,9 @@ func (m *Mapper) discoverSubdomains(wordlist []string) []string {
 		dnsWg.Wait()
 	}
 
-	limit := 20
-	if m.Mode == "advanced" {
-		limit = 150
+	limit := 25
+	if m.Mode == "advanced" || m.PackName == "full" {
+		limit = 250 // High discovery ceiling for full scans
 	}
 	if len(finalSubs) > limit {
 		finalSubs = finalSubs[:limit]
@@ -232,7 +247,7 @@ func (m *Mapper) probeEndpoint(host, path string) bool {
 	urls := []string{"https://" + host + path, "http://" + host + path}
 	for _, u := range urls {
 		req, _ := http.NewRequest("GET", u, nil)
-		req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; NetMap/1.0; +https://github.com/lucasenlucas)")
+		req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; NetMap/1.0; +https://github.com/lucasmangroelal)")
 		resp, err := m.client.Do(req)
 		if err != nil {
 			continue
