@@ -67,7 +67,7 @@ func main() {
 	}
 
 	// Initialize Mapper Graph
-	m := mapper.NewMapper(domain)
+	m := mapper.NewMapper(domain, mode)
 	m.Run()
 
 	focusMode := models.FocusMode(focus)
