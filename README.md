@@ -61,7 +61,7 @@ netmap -d <domain> [options]
 | `-d, --domain`  | Target domain                          |
 | `-p, --pack`    | Discovery Pack (`standard`, `dns-extended`, `web-deep`, `api-focused`, `admin-stealth`, `full`, `ultra`) |
 | `-w, --wordlist`| Path to custom local wordlist (.txt)   |
-| `-f, --focus`   | Filter (`all`, `auth`, `admin`, `api`, `config`, `dev`) |
+| `-f, --focus`   | Filter (`all`, `auth`, `admin`, `api`, `config`, `dev`, `dns`) |
 | `-o, --output`  | `text` | `json`                        |
 | `-m, --mode`    | `basic` | `advanced`                   |
 | `-v, --verbose` | Debug output                           |
@@ -73,30 +73,31 @@ netmap -d example.com -p ultra
 ```
 The **Ultra Intelligence Engine** uses over 2500+ combined targets for deep infrastructure mapping.
 
+### dns — Deep Infrastructure Recon
+```
+netmap -d example.com -f dns
+```
+NetMap now analyzes **CNAME, MX, and TXT** records to uncover hidden aliases, mail handlers, and cloud providers.
+
 ### Live Feedback
 NetMap provides real-time terminal progress during high-volume scans:
 `[~] Mapping: 12/50 hosts | 452/2500 endpoints | [Checking: /api/v2/config]`
-
-### focus — Targeted View
-```
-netmap -d example.com -f config
-netmap -d example.com -f dev
-```
 
 ## How it works
 ### OSINT Discovery
 Uses Certificate Transparency logs (e.g. crt.sh)
 → finds known subdomains without directly targeting the server
 
-### Live Probing
-Performs concurrent HTTP requests
-→ detects active endpoints and validates responses. 
+### Live Probing & DNS Mapping
+Performs concurrent HTTP requests and **Deep DNS Lookups**.
+→ detects active endpoints and validates infrastructure records.
 
 ### Classification (Categorical Intelligence)
 Endpoints are labeled automatically:
 * `[AUTH]` → login / authentication
 * `[ADMIN]` → admin panels
 * `[API]` → API routes
+* `[DNS]` → CNAME, MX, TXT records
 * `[CONFIG]` → Sensitive configuration files (.env, settings)
 * `[DEV]` → Development artifacts (.git, Dockerfiles)
 * `[GENERAL]` → standard paths

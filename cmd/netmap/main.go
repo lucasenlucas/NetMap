@@ -52,14 +52,14 @@ func main() {
 		fmt.Println("  -d, --domain string      De website die je wilt analyseren. (Verplicht)")
 		fmt.Println("  -p, --pack string        Discovery Pack: standard, dns-extended, web-deep, api-focused, admin-stealth, full, ultra")
 		fmt.Println("  -w, --wordlist string    Pad naar een eigen wordlist (.txt bestand)")
-		fmt.Println("  -f, --focus string       Focus modus: all, auth, admin, api, config, dev (standaard \"all\")")
+		fmt.Println("  -f, --focus string       Focus modus: all, auth, admin, api, config, dev, dns (standaard \"all\")")
 		fmt.Println("  -o, --output string      Output formaat: text, json (standaard \"text\")")
 		fmt.Println("  -m, --mode string        Mapping modus: basic, advanced (standaard \"basic\")")
 		fmt.Println("  -v, --verbose            Toon debug logging (OSINT, HTTP responses, errors)")
 		fmt.Println("\nVoorbeelden:")
+		fmt.Println("  netmap -d voorbeeld.nl -f dns")
 		fmt.Println("  netmap -d voorbeeld.nl -p ultra")
-		fmt.Println("  netmap -d voorbeeld.nl -m advanced -v")
-		fmt.Println("  netmap -d voorbeeld.nl -f admin")
+		fmt.Println("  netmap -d voorbeeld.nl -m advanced")
 		fmt.Println("  netmap -d voorbeeld.nl -o json > map.json\n")
 	}
 

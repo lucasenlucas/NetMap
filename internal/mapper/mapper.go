@@ -89,7 +89,7 @@ func (m *Mapper) Run() {
 	// 5. Global Concurrency Management
 	globalLimit := 100
 	if m.PackName == "ultra" {
-		globalLimit = 250 // Max volume for Ultra mode
+		globalLimit = 250 
 	}
 	globalSemaphore := make(chan struct{}, globalLimit)
 
@@ -99,6 +99,9 @@ func (m *Mapper) Run() {
 		go func(subdomain string) {
 			defer wg.Done()
 			
+			// Always lookup DNS records for discovered subdomains, even if HTTP is dead
+			m.lookupDNSRecords(subdomain)
+
 			if !m.isAlive(subdomain) {
 				atomic.AddInt32(&m.completedSubs, 1)
 				atomic.AddInt32(&m.completedPaths, int32(len(pathList)))
@@ -149,8 +152,59 @@ func (m *Mapper) Run() {
 
 	wg.Wait()
 	close(stopProgress)
-	time.Sleep(200 * time.Millisecond) // Catch final render
+	time.Sleep(200 * time.Millisecond) 
 	fmt.Fprintf(os.Stderr, "\r%s\r", strings.Repeat(" ", 80)) 
+}
+
+func (m *Mapper) lookupDNSRecords(host string) {
+	parentID := "sub-" + host
+	if host == m.Graph.Target.Domain {
+		parentID = "root-" + host
+	}
+
+	// 1. Lookup CNAME
+	if cname, err := net.LookupCNAME(host); err == nil && cname != "" && cname != host+"." {
+		cnameID := fmt.Sprintf("dns-cname-%s", host)
+		m.addNodeSafe(models.Node{
+			ID:       cnameID,
+			Label:    fmt.Sprintf("CNAME: %s", strings.TrimSuffix(cname, ".")),
+			Type:     models.EndpointNode,
+			Category: models.TypeDNS,
+			ParentID: parentID,
+		})
+		m.addEdgeSafe(parentID, cnameID, "cname_points_to")
+	}
+
+	// 2. Lookup MX
+	if mxs, err := net.LookupMX(host); err == nil {
+		for _, mx := range mxs {
+			mxID := fmt.Sprintf("dns-mx-%s-%s", host, mx.Host)
+			m.addNodeSafe(models.Node{
+				ID:       mxID,
+				Label:    fmt.Sprintf("MX: %s (pref: %d)", strings.TrimSuffix(mx.Host, "."), mx.Pref),
+				Type:     models.EndpointNode,
+				Category: models.TypeDNS,
+				ParentID: parentID,
+			})
+			m.addEdgeSafe(parentID, mxID, "mail_handled_by")
+		}
+	}
+
+	// 3. Lookup TXT
+	if txts, err := net.LookupTXT(host); err == nil {
+		for i, txt := range txts {
+			if len(txt) > 80 { txt = txt[:77] + "..." }
+			txtID := fmt.Sprintf("dns-txt-%s-%d", host, i)
+			m.addNodeSafe(models.Node{
+				ID:       txtID,
+				Label:    fmt.Sprintf("TXT: %s", txt),
+				Type:     models.EndpointNode,
+				Category: models.TypeDNS,
+				ParentID: parentID,
+			})
+			m.addEdgeSafe(parentID, txtID, "has_txt_record")
+		}
+	}
 }
 
 func (m *Mapper) progressReporter(stop chan struct{}) {

@@ -19,6 +19,7 @@ const (
 	FocusAPI    FocusMode = "api"
 	FocusConfig FocusMode = "config"
 	FocusDev    FocusMode = "dev"
+	FocusDNS    FocusMode = "dns"
 )
 
 // EndpointType classifies the nature of an endpoint.
@@ -30,6 +31,7 @@ const (
 	TypeAPI     EndpointType = "api"
 	TypeConfig  EndpointType = "config"
 	TypeDev     EndpointType = "dev"
+	TypeDNS     EndpointType = "dns"
 	TypeGeneral EndpointType = "general"
 	TypeUnknown EndpointType = "unknown"
 )

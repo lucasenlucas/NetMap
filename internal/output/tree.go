@@ -17,10 +17,11 @@ const (
 	Purple = "\033[35m"
 	Green  = "\033[32m"
 	White  = "\033[97m"
+	Blue   = "\033[34m"
 )
 
 func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
-	var subCount, endpointCount, interestCount, domainCount int
+	var subCount, endpointCount, interestCount, domainCount, dnsCount int
 
 	var roots []*models.Node
 	for i, n := range graph.Nodes {
@@ -30,7 +31,11 @@ func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
 		} else if n.Type == models.SubdomainNode {
 			subCount++
 		} else if n.Type == models.EndpointNode {
-			endpointCount++
+			if n.Category == models.TypeDNS {
+				dnsCount++
+			} else {
+				endpointCount++
+			}
 			if isHighInterest(n.Category) {
 				interestCount++
 			}
@@ -94,13 +99,15 @@ func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
 					epPrefix = "└──"
 				}
 
-				baseStr := fmt.Sprintf("%s%s %s", subPrefix, epPrefix, ep.Label)
+				label := ep.Label
+				if len(label) > 60 { label = label[:57] + "..." }
+				baseStr := fmt.Sprintf("%s%s %s", subPrefix, epPrefix, label)
 				fmt.Print(baseStr)
 
 				paddingList := padSpacing - len(baseStr)
 				if paddingList < 1 { paddingList = 1 }
 				fmt.Print(strings.Repeat(" ", paddingList))
-				printCategoryLabel(ep.Category)
+				printCategoryLabel(ep.Category, ep.Label)
 				fmt.Println()
 			}
 		}
@@ -111,13 +118,15 @@ func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
 			if isLastEp {
 				epPrefix = "└──"
 			}
-			baseStr := fmt.Sprintf("%s %s", epPrefix, ep.Label)
+			label := ep.Label
+			if len(label) > 60 { label = label[:57] + "..." }
+			baseStr := fmt.Sprintf("%s %s", epPrefix, label)
 			fmt.Print(baseStr)
 
 			paddingList := padSpacing - len(baseStr)
 			if paddingList < 1 { paddingList = 1 }
 			fmt.Print(strings.Repeat(" ", paddingList))
-			printCategoryLabel(ep.Category)
+			printCategoryLabel(ep.Category, ep.Label)
 			fmt.Println()
 		}
 	}
@@ -126,6 +135,7 @@ func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
 	fmt.Printf("  Domains:       %s%d%s\n", White, domainCount, Reset)
 	fmt.Printf("  Subdomains:    %s%d%s\n", White, subCount, Reset)
 	fmt.Printf("  Endpoints:     %s%d%s\n", White, endpointCount, Reset)
+	fmt.Printf("  DNS Records:   %s%d%s\n", Blue, dnsCount, Reset)
 	fmt.Printf("  High-Interest: %s%d%s\n", Yellow, interestCount, Reset)
 	if focus != models.FocusAll {
 		fmt.Printf("  Filter Focus:  %s%s%s\n", Cyan, focus, Reset)
@@ -141,10 +151,10 @@ func shouldShow(node *models.Node, focus models.FocusMode) bool {
 }
 
 func isHighInterest(cat models.EndpointType) bool {
-	return cat == models.TypeAuth || cat == models.TypeAdmin || cat == models.TypeAPI || cat == models.TypeConfig || cat == models.TypeDev
+	return cat == models.TypeAuth || cat == models.TypeAdmin || cat == models.TypeAPI || cat == models.TypeConfig || cat == models.TypeDev || cat == models.TypeDNS
 }
 
-func printCategoryLabel(cat models.EndpointType) {
+func printCategoryLabel(cat models.EndpointType, label string) {
 	switch cat {
 	case models.TypeAuth:
 		fmt.Printf("%s[AUTH]%s", Purple, Reset)
@@ -156,6 +166,14 @@ func printCategoryLabel(cat models.EndpointType) {
 		fmt.Printf("%s[CONFIG]%s", Yellow, Reset)
 	case models.TypeDev:
 		fmt.Printf("%s[DEV]%s", Green, Reset)
+	case models.TypeDNS:
+		if strings.HasPrefix(label, "MX:") {
+			fmt.Printf("%s[MX]%s", Blue, Reset)
+		} else if strings.HasPrefix(label, "CNAME:") {
+			fmt.Printf("%s[CNAME]%s", Cyan, Reset)
+		} else {
+			fmt.Printf("%s[TXT]%s", Yellow, Reset)
+		}
 	case models.TypeGeneral:
 		fmt.Printf("%s[GENERAL]%s", Gray, Reset)
 	default:
