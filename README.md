@@ -68,6 +68,8 @@ netmap -d <domain> [options]
 | Flag            | Description                            |
 | --------------- | -------------------------------------- |
 | `-d, --domain`  | Target domain                          |
+| `-p, --pack`    | Discovery Pack (`standard`, `dns-extended`, `web-deep`, `api-focused`, `admin-stealth`) |
+| `-w, --wordlist`| Path to custom local wordlist (.txt)   |
 | `-f, --focus`   | Filter (`all`, `auth`, `admin`, `api`) |
 | `-o, --output`  | `text` | `json`                        |
 | `-m, --mode`    | `basic` | `advanced`                   |
