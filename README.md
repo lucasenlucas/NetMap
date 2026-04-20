@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/lucasenlucas/lucas_cdn/blob/main/Scherm%C2%ADafbeelding%202026-04-10%20om%2021.09.22.png?raw=true" alt="NetMap Banner"/>
+  <img src="https://github.com/netseries/lucas_cdn/blob/main/netmap_banner.png?raw=true" alt="NetMap Banner"/>
 </p>
 
 <p align="center">
@@ -38,7 +38,7 @@ This tool performs network requests and structure mapping. Use responsibly.
 ## Quick Install
 ### macOS & Linux
 ```
-curl -fsSL https://raw.githubusercontent.com/lucasenlucas/NetMap/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/netseries/NetMap/main/install.sh | sh
 ```
 Run instantly:
 ```
@@ -46,7 +46,7 @@ netmap --help
 ```
 ### Go install
 ```
-go install github.com/lucasenlucas/netmap/cmd/netmap@latest
+go install github.com/netseries/netmap/cmd/netmap@latest
 ```
 
 ## CLI Philosophy
@@ -119,8 +119,8 @@ Endpoints are labeled automatically based on their nature:
 * `[GENERAL]` → Standard web paths
 
 ## Author
-Built by Lucas Mangroelal 
-https://lucasmangroelal.nl
+Built by **Netseries Team** | [Netseries.dev](https://netseries.dev)
+Contact: **team@netseries.dev**
 
 # ⚠️ Disclaimer
 **This tool is for educational and authorized use only. Do not use it against systems without permission.**

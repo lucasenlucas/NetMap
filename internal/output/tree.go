@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lucas/netmap/internal/models"
+	"github.com/netseries/netmap/internal/models"
 )
 
 const (

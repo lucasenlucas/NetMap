@@ -3,7 +3,7 @@ package classifier
 import (
 	"strings"
 
-	"github.com/lucas/netmap/internal/models"
+	"github.com/netseries/netmap/internal/models"
 )
 
 // ClassifyEndpoint takes a path and returns its EndpointType based on keywords.

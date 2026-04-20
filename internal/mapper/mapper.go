@@ -11,9 +11,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/lucas/netmap/internal/classifier"
-	"github.com/lucas/netmap/internal/discovery"
-	"github.com/lucas/netmap/internal/models"
+	"github.com/netseries/netmap/internal/classifier"
+	"github.com/netseries/netmap/internal/discovery"
+	"github.com/netseries/netmap/internal/models"
 )
 
 // CrtShResponse represents a single valid entry block from crt.sh
@@ -311,7 +311,7 @@ func (m *Mapper) probeEndpoint(host, path string) bool {
 	if !strings.HasPrefix(path, "/") { path = "/" + path }
 	u := "https://" + host + path
 	req, _ := http.NewRequest("GET", u, nil)
-	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; NetMap/1.0; +https://github.com/lucasenlucas/NetMap)")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; NetMap/1.0; +https://github.com/netseries/NetMap)")
 	resp, err := m.client.Do(req)
 	if err != nil { return false }
 	status := resp.StatusCode

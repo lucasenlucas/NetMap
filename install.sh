@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-REPO="lucasenlucas/NetMap"
+REPO="netseries/NetMap"
 INSTALL_DIR="/usr/local/bin"
 BIN_NAME="netmap"
 
@@ -66,5 +66,5 @@ echo ""
 echo "  ✓ NetMap installed successfully!"
 echo "  Run: netmap --help"
 echo ""
-echo "  NetMap Intelligence Toolkit"
+echo "  Netseries Intelligence Toolkit"
 echo ""

@@ -1,3 +1,3 @@
-module github.com/lucas/netmap
+module github.com/netseries/netmap
 
 go 1.21

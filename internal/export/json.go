@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/lucas/netmap/internal/models"
+	"github.com/netseries/netmap/internal/models"
 )
 
 // ExportWrapper encapsulates the graph payload in a flattened format ready for frontend consumption.

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lucas/netmap/internal/export"
-	"github.com/lucas/netmap/internal/mapper"
-	"github.com/lucas/netmap/internal/models"
-	"github.com/lucas/netmap/internal/output"
+	"github.com/netseries/netmap/internal/export"
+	"github.com/netseries/netmap/internal/mapper"
+	"github.com/netseries/netmap/internal/models"
+	"github.com/netseries/netmap/internal/output"
 )
 
 const banner = `
@@ -45,7 +45,7 @@ func main() {
 
 	flag.Usage = func() {
 		fmt.Printf("%s%s%s\n", output.Cyan, banner, output.Reset)
-		fmt.Printf("%sNetMap Intelligence Toolkit - Visual Network Mapper%s\n", output.Bold, output.Reset)
+		fmt.Printf("%sNetseries Intelligence Toolkit - Visual Network Mapper%s\n", output.Bold, output.Reset)
 		fmt.Println("\nUsage:")
 		fmt.Println("  netmap -d <target> [flags]")
 		fmt.Println("\nFlags:")
