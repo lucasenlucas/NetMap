@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/netseries/lucas_cdn/blob/main/netmap_banner.png?raw=true" alt="NetMap Banner"/>
+  <img src="https://github.com/lucasenlucas/lucas_cdn/blob/main/Scherm%C2%ADafbeelding%202026-04-10%20om%2021.09.22.png?raw=true" alt="NetMap Banner"/>
 </p>
 
 <p align="center">
