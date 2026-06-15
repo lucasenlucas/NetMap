@@ -50,7 +50,7 @@ func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
 	}
 
 	// Dynamic padding
-	maxLineLen := 40 
+	maxLineLen := 40
 	padSpacing := maxLineLen + 10
 
 	fmt.Printf("\n%sNetMap Intelligence%s\n", Bold+Cyan, Reset)
@@ -58,7 +58,7 @@ func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
 
 	for _, root := range roots {
 		fmt.Printf("%s%s%s\n", Bold, root.Label, Reset)
-		
+
 		var rootSubs []*models.Node
 		var rootEps []*models.Node
 		for _, child := range childrenMap[root.ID] {
@@ -100,12 +100,16 @@ func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
 				}
 
 				label := ep.Label
-				if len(label) > 60 { label = label[:57] + "..." }
+				if len(label) > 60 {
+					label = label[:57] + "..."
+				}
 				baseStr := fmt.Sprintf("%s%s %s", subPrefix, epPrefix, label)
 				fmt.Print(baseStr)
 
 				paddingList := padSpacing - len(baseStr)
-				if paddingList < 1 { paddingList = 1 }
+				if paddingList < 1 {
+					paddingList = 1
+				}
 				fmt.Print(strings.Repeat(" ", paddingList))
 				printCategoryLabel(ep.Category, ep.Label)
 				fmt.Println()
@@ -119,12 +123,16 @@ func PrintTree(graph *models.MapGraph, focus models.FocusMode) {
 				epPrefix = "└──"
 			}
 			label := ep.Label
-			if len(label) > 60 { label = label[:57] + "..." }
+			if len(label) > 60 {
+				label = label[:57] + "..."
+			}
 			baseStr := fmt.Sprintf("%s %s", epPrefix, label)
 			fmt.Print(baseStr)
 
 			paddingList := padSpacing - len(baseStr)
-			if paddingList < 1 { paddingList = 1 }
+			if paddingList < 1 {
+				paddingList = 1
+			}
 			fmt.Print(strings.Repeat(" ", paddingList))
 			printCategoryLabel(ep.Category, ep.Label)
 			fmt.Println()

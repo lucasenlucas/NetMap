@@ -38,13 +38,13 @@ const (
 
 // Node represents a single entity in the parsed network structure (domain, subdomain, endpoint).
 type Node struct {
-	ID        string       `json:"id"`
-	Label     string       `json:"label"`
-	Type      NodeType     `json:"type"`
-	Category  EndpointType `json:"category,omitempty"`
-	ParentID  string       `json:"parent_id,omitempty"`
+	ID        string            `json:"id"`
+	Label     string            `json:"label"`
+	Type      NodeType          `json:"type"`
+	Category  EndpointType      `json:"category,omitempty"`
+	ParentID  string            `json:"parent_id,omitempty"`
 	Metadata  map[string]string `json:"metadata,omitempty"`
-	RiskLevel int          `json:"risk_level,omitempty"`
+	RiskLevel int               `json:"risk_level,omitempty"`
 }
 
 // Edge represents a relationship between two nodes.

@@ -27,16 +27,16 @@ type Mapper struct {
 	Mode           models.FocusMode
 	PackName       string
 	CustomWordlist string
-	
+
 	// Progress Tracking
-	totalSubs       int32
-	completedSubs   int32
-	totalPaths      int32
-	completedPaths  int32
-	activeHost      string
-	
-	mu             sync.Mutex
-	client         *http.Client
+	totalSubs      int32
+	completedSubs  int32
+	totalPaths     int32
+	completedPaths int32
+	activeHost     string
+
+	mu     sync.Mutex
+	client *http.Client
 }
 
 func NewMapper(domain string, mode string, pack string, customWordlist string) *Mapper {
@@ -89,7 +89,7 @@ func (m *Mapper) Run() {
 	// 5. Global Concurrency Management
 	globalLimit := 100
 	if m.PackName == "ultra" {
-		globalLimit = 250 
+		globalLimit = 250
 	}
 	globalSemaphore := make(chan struct{}, globalLimit)
 
@@ -98,7 +98,7 @@ func (m *Mapper) Run() {
 		wg.Add(1)
 		go func(subdomain string) {
 			defer wg.Done()
-			
+
 			// Always lookup DNS records for discovered subdomains, even if HTTP is dead
 			m.lookupDNSRecords(subdomain)
 
@@ -152,8 +152,8 @@ func (m *Mapper) Run() {
 
 	wg.Wait()
 	close(stopProgress)
-	time.Sleep(200 * time.Millisecond) 
-	fmt.Fprintf(os.Stderr, "\r%s\r", strings.Repeat(" ", 80)) 
+	time.Sleep(200 * time.Millisecond)
+	fmt.Fprintf(os.Stderr, "\r%s\r", strings.Repeat(" ", 80))
 }
 
 func (m *Mapper) lookupDNSRecords(host string) {
@@ -193,7 +193,9 @@ func (m *Mapper) lookupDNSRecords(host string) {
 	// 3. Lookup TXT
 	if txts, err := net.LookupTXT(host); err == nil {
 		for i, txt := range txts {
-			if len(txt) > 80 { txt = txt[:77] + "..." }
+			if len(txt) > 80 {
+				txt = txt[:77] + "..."
+			}
 			txtID := fmt.Sprintf("dns-txt-%s-%d", host, i)
 			m.addNodeSafe(models.Node{
 				ID:       txtID,
@@ -222,7 +224,7 @@ func (m *Mapper) progressReporter(stop chan struct{}) {
 			totalPaths := atomic.LoadInt32(&m.totalPaths)
 			host := m.getHost()
 
-			fmt.Fprintf(os.Stderr, "\r\033[36m[~] Mapping: %d/%d hosts | %d/%d endpoints | [%s]\r\033[0m", 
+			fmt.Fprintf(os.Stderr, "\r\033[36m[~] Mapping: %d/%d hosts | %d/%d endpoints | [%s]\r\033[0m",
 				subs, totalSubs, paths, totalPaths, truncate(host, 15))
 		}
 	}
@@ -268,8 +270,12 @@ func (m *Mapper) discoverSubdomains(wordlist []string) []string {
 	}
 
 	limit := 30
-	if m.PackName == "full" { limit = 150 }
-	if m.PackName == "ultra" { limit = 500 }
+	if m.PackName == "full" {
+		limit = 150
+	}
+	if m.PackName == "ultra" {
+		limit = 500
+	}
 
 	if len(finalSubs) > limit {
 		finalSubs = finalSubs[:limit]
@@ -281,17 +287,23 @@ func (m *Mapper) discoverSubdomains(wordlist []string) []string {
 func (m *Mapper) fetchOSINTSubdomains(domain string) []string {
 	url := fmt.Sprintf("https://crt.sh/?q=%%25.%s&output=json", domain)
 	resp, err := m.client.Get(url)
-	if err != nil || resp.StatusCode != 200 { return []string{} }
+	if err != nil || resp.StatusCode != 200 {
+		return []string{}
+	}
 	defer resp.Body.Close()
 
 	var results []CrtShResponse
-	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil { return []string{} }
+	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
+		return []string{}
+	}
 
 	var subs []string
 	for _, r := range results {
 		sub := strings.ReplaceAll(r.NameValue, "*.", "")
 		sub = strings.TrimSpace(sub)
-		if strings.Contains(sub, "\n") { sub = strings.Split(sub, "\n")[0] }
+		if strings.Contains(sub, "\n") {
+			sub = strings.Split(sub, "\n")[0]
+		}
 		if sub != "" && sub != domain && !strings.Contains(sub, "@") && !strings.Contains(sub, " ") {
 			subs = append(subs, sub)
 		}
@@ -301,19 +313,29 @@ func (m *Mapper) fetchOSINTSubdomains(domain string) []string {
 
 func (m *Mapper) isAlive(host string) bool {
 	resp, err := m.client.Head("https://" + host)
-	if err == nil { resp.Body.Close(); return true }
+	if err == nil {
+		resp.Body.Close()
+		return true
+	}
 	resp, err = m.client.Head("http://" + host)
-	if err == nil { resp.Body.Close(); return true }
+	if err == nil {
+		resp.Body.Close()
+		return true
+	}
 	return false
 }
 
 func (m *Mapper) probeEndpoint(host, path string) bool {
-	if !strings.HasPrefix(path, "/") { path = "/" + path }
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
 	u := "https://" + host + path
 	req, _ := http.NewRequest("GET", u, nil)
 	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; NetMap/1.0; +https://github.com/netseries/NetMap)")
 	resp, err := m.client.Do(req)
-	if err != nil { return false }
+	if err != nil {
+		return false
+	}
 	status := resp.StatusCode
 	resp.Body.Close()
 	return (status >= 200 && status < 300) || status == 401 || status == 403
@@ -352,6 +374,8 @@ func (m *Mapper) getHost() string {
 }
 
 func truncate(s string, n int) string {
-	if len(s) <= n { return s }
+	if len(s) <= n {
+		return s
+	}
 	return s[:n-3] + "..."
 }

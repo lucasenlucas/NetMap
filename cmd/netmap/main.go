@@ -60,7 +60,7 @@ func main() {
 		fmt.Println("  netmap -d example.com -p ultra")
 		fmt.Println("  netmap -d example.com -m advanced -v")
 		fmt.Println("  netmap -d example.com -f dns")
-		fmt.Println("  netmap -d example.com -o json > map.json\n")
+		fmt.Println("  netmap -d example.com -o json > map.json")
 	}
 
 	flag.Parse()
